@@ -14,11 +14,12 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import com.norconex.collector.core.ICollector;
-// import com.norconex.collector.core.ICollectorLifeCycleListener;
 import com.norconex.commons.lang.config.IXMLConfigurable;
 import com.norconex.commons.lang.config.XMLConfigurationUtil;
 import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
+
+import com.norconex.jef4.job.AbstractJobStateChangeListener;
+import com.norconex.jef4.status.IJobStatus;
 
 /**
  * S3StatusMirror - Copies collector status to S3
@@ -28,23 +29,44 @@ import com.norconex.commons.lang.xml.EnhancedXMLStreamWriter;
  * a monitor application can be aware of the status and progress
  * of the crawler.
  */
-public class S3StatusMirror implements IXMLConfigurable {
+public class S3StatusListener extends AbstractJobStateChangeListener implements IXMLConfigurable {
 
-    private static final Logger LOG = LogManager.getLogger(S3StatusMirror.class);
+    private static final Logger LOG = LogManager.getLogger(S3StatusListener.class);
+
+    private String bucketName;
+    private String profileName;
+    private String folderPrefix;
+
     @Override
     public void loadFromXML(Reader reader) throws IOException {
         // Generate XML Configuration from reader
         XMLConfiguration xml = XMLConfigurationUtil.newXMLConfiguration(reader);
+
+        setBucketName(xml.getString("bucket", getBucketName()));
+        setProfileName(xml.getString("profile", getProfileName()));
+        setFolderPrefix(xml.getString("prefix", getFolderPrefix()));
     }
     
     @Override
     public void saveToXML(Writer writer) throws IOException {
         try {
             // Generate XML Stream Writer from writer
-            EnhancedXMLStreamWriter xmlwriter = new EnhancedXMLStreamWriter(writer);
+            final EnhancedXMLStreamWriter xmlwriter = new EnhancedXMLStreamWriter(writer);
 
             xmlwriter.writeStartElement("listener");
             xmlwriter.writeAttribute("class", getClass().getCanonicalName());
+
+            xmlwriter.writeAttribute("bucket", getBucketName());
+
+            final String profileName = getProfileName();
+            if (profileName != null) {
+                xmlwriter.writeAttribute("profile", profileName);
+            }
+
+            final String prefix = getFolderPrefix();
+            if (prefix != null) {
+                xmlwriter.writeAttribute("prefix", prefix);
+            }
 
             xmlwriter.writeEndElement();
             xmlwriter.flush();
@@ -54,12 +76,10 @@ public class S3StatusMirror implements IXMLConfigurable {
         }
     }
 
-    public void onCollectorStart(ICollector collector) {
-        // JEF API listener
-    }
-
-    public void onCollectorFinish(ICollector collector) {
-        // JEF API listener
+    @Override
+    public void jobStateChanged(IJobStatus progress) {
+        // TODO Auto-generated method stub
+        // Write state change to amazon S3
     }
 
     @Override
@@ -82,5 +102,29 @@ public class S3StatusMirror implements IXMLConfigurable {
         final S3StatusMirror othmirror = (S3StatusMirror) other;
         return new EqualsBuilder()
                 .isEquals();
+    }
+
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    public void setBucketName(String bucketName) {
+        this.bucketName = bucketName;
+    }
+
+    public String getProfileName() {
+        return profileName;
+    }
+
+    public void setProfileName(String profileName) {
+        this.profileName = profileName;
+    }
+
+    public String getFolderPrefix() {
+        return folderPrefix;
+    }
+
+    public void setFolderPrefix(String folderPrefix) {
+        this.folderPrefix = folderPrefix;
     }
 }
