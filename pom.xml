@@ -25,6 +25,10 @@
     <norconex.file.version>2.9.0</norconex.file.version>
   </properties>
 
+  <modules>
+    <module>s3-status-mirror</module>
+  </modules>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
