@@ -33,18 +33,18 @@ public class S3StatusListener extends AbstractJobStateChangeListener implements 
 
     private static final Logger LOG = LogManager.getLogger(S3StatusListener.class);
 
-    private String bucketName;
-    private String profileName;
-    private String folderPrefix;
+    private String bucket;
+    private String profile;
+    private String prefix;
 
     @Override
     public void loadFromXML(Reader reader) throws IOException {
         // Generate XML Configuration from reader
         XMLConfiguration xml = XMLConfigurationUtil.newXMLConfiguration(reader);
 
-        setBucketName(xml.getString("bucket", getBucketName()));
-        setProfileName(xml.getString("profile", getProfileName()));
-        setFolderPrefix(xml.getString("prefix", getFolderPrefix()));
+        setBucket(xml.getString("bucket", getBucket()));
+        setProfile(xml.getString("profile", getProfile()));
+        setPrefix(xml.getString("prefix", getPrefix()));
     }
     
     @Override
@@ -56,16 +56,16 @@ public class S3StatusListener extends AbstractJobStateChangeListener implements 
             xmlwriter.writeStartElement("listener");
             xmlwriter.writeAttribute("class", getClass().getCanonicalName());
 
-            xmlwriter.writeAttribute("bucket", getBucketName());
+            xmlwriter.writeElementString("bucket", getBucket());
 
-            final String profileName = getProfileName();
+            final String profileName = getProfile();
             if (profileName != null) {
-                xmlwriter.writeAttribute("profile", profileName);
+                xmlwriter.writeElementString("profile", profileName);
             }
 
-            final String prefix = getFolderPrefix();
+            final String prefix = getPrefix();
             if (prefix != null) {
-                xmlwriter.writeAttribute("prefix", prefix);
+                xmlwriter.writeElementString("prefix", prefix);
             }
 
             xmlwriter.writeEndElement();
@@ -85,46 +85,55 @@ public class S3StatusListener extends AbstractJobStateChangeListener implements 
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("bucket", bucket)
+                .append("prefix", prefix)
+                .append("profile", profile)
                 .toString();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder()
+                .append(bucket)
+                .append(prefix)
+                .append(profile)
                 .toHashCode();
     }
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof S3StatusMirror)) {
+        if (!(other instanceof S3StatusListener)) {
             return false;
         }
-        final S3StatusMirror othmirror = (S3StatusMirror) other;
+        final S3StatusListener otherObject = (S3StatusListener) other;
         return new EqualsBuilder()
+                .append(bucket, otherObject.bucket)
+                .append(prefix, otherObject.prefix)
+                .append(profile, otherObject.profile)
                 .isEquals();
     }
 
-    public String getBucketName() {
-        return bucketName;
+    public String getBucket() {
+        return bucket;
     }
 
-    public void setBucketName(String bucketName) {
-        this.bucketName = bucketName;
+    public void setBucket(String bucket) {
+        this.bucket = bucket;
     }
 
-    public String getProfileName() {
-        return profileName;
+    public String getProfile() {
+        return profile;
     }
 
-    public void setProfileName(String profileName) {
-        this.profileName = profileName;
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 
-    public String getFolderPrefix() {
-        return folderPrefix;
+    public String getPrefix() {
+        return prefix;
     }
 
-    public void setFolderPrefix(String folderPrefix) {
-        this.folderPrefix = folderPrefix;
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
     }
 }
